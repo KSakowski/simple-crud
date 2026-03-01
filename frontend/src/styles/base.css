@@ -1,0 +1,14 @@
+/* ─── Base / global styles ───────────────────────────────────────────────────── */
+/* Applied to every page. Keep this lean — prefer Tailwind utilities in JSX.    */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
