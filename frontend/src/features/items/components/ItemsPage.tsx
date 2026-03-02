@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { getItems, deleteItem } from '../services/itemsApi';
-import type { Item } from '../services/itemsApi';
+import type { Item } from '../types/item';
 import ItemDialog from './ItemDialog';
 import DeleteItemDialog from './DeleteItemDialog';
 import Pagination from '@/shared/components/Pagination';

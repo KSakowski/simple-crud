@@ -1,11 +1,5 @@
 import { Button } from '@/shared/components/ui/button';
-
-interface PaginationProps {
-  page: number;
-  totalPages: number;
-  totalElements: number;
-  onPageChange: (page: number) => void;
-}
+import type { PaginationProps } from '@/shared/types/pagination';
 
 export default function Pagination({
   page,

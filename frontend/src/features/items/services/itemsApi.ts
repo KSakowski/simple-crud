@@ -1,30 +1,8 @@
+import type { Item, ItemFormData, ItemsQueryParams, PageResponse } from '../types/item';
+
+export type { Item, ItemFormData, ItemsQueryParams, PageResponse };
+
 const BASE = '/api/items';
-
-export interface Item {
-  id: number;
-  name: string;
-  description?: string;
-}
-
-export interface ItemFormData {
-  name: string;
-  description?: string;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
-
-export interface ItemsQueryParams {
-  page: number;
-  size: number;
-  sort: string;
-  search: string;
-}
 
 export const getItems = (params: ItemsQueryParams): Promise<PageResponse<Item>> => {
   const query = new URLSearchParams({

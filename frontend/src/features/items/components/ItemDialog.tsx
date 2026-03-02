@@ -22,7 +22,7 @@ import {
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { createItem, updateItem } from '../services/itemsApi';
-import type { Item } from '../services/itemsApi';
+import type { Item } from '../types/item';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
