@@ -3,10 +3,13 @@ package com.example.simplecrud.controller;
 import com.example.simplecrud.model.Item;
 import com.example.simplecrud.service.ItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/items")
@@ -17,8 +20,24 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<Item> getAll() {
-        return itemService.findAll();
+    public Page<Item> getAll(
+            @RequestParam(defaultValue = "0")       int    page,
+            @RequestParam(defaultValue = "10")      int    size,
+            @RequestParam(defaultValue = "id,asc")  String sort,
+            @RequestParam(defaultValue = "")        String search) {
+
+        String[] parts = sort.split(",");
+        String   field = parts[0].trim();
+        String   dir   = parts.length > 1 ? parts[1].trim() : "asc";
+
+        Set<String> ALLOWED = Set.of("id", "name", "description");
+        if (!ALLOWED.contains(field)) field = "id";
+
+        Sort sortObj = "desc".equalsIgnoreCase(dir)
+                ? Sort.by(field).descending()
+                : Sort.by(field).ascending();
+
+        return itemService.findAll(search, PageRequest.of(page, size, sortObj));
     }
 
     @GetMapping("/{id}")

@@ -11,8 +11,28 @@ export interface ItemFormData {
   description?: string
 }
 
-export const getItems = (): Promise<Item[]> =>
-  fetch(BASE).then((res) => res.json())
+export interface PageResponse<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+export interface ItemsQueryParams {
+  page: number
+  size: number
+  sort: string
+  search: string
+}
+
+export const getItems = (params: ItemsQueryParams): Promise<PageResponse<Item>> => {
+  const query = new URLSearchParams({
+    page: String(params.page), size: String(params.size),
+    sort: params.sort, search: params.search,
+  })
+  return fetch(`${BASE}?${query}`).then((res) => res.json())
+}
 
 export const createItem = (data: ItemFormData): Promise<Item> =>
   fetch(BASE, {

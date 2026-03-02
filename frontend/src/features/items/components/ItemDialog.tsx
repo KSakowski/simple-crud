@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
+} from '@/shared/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -18,15 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { createItem, updateItem } from '../api/itemsApi'
-import type { Item } from '../api/itemsApi'
+} from '@/shared/components/ui/form'
+import { Input } from '@/shared/components/ui/input'
+import { Button } from '@/shared/components/ui/button'
+import { createItem, updateItem } from '../services/itemsApi'
+import type { Item } from '../services/itemsApi'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
-  description: z.string().max(255).optional().default(''),
+  description: z.string().max(255),
 })
 
 type FormData = z.infer<typeof schema>

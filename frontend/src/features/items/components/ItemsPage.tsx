@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useDebounce } from '@/shared/hooks/useDebounce'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Plus, Pencil, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { Button } from '@/shared/components/ui/button'
+import { Input } from '@/shared/components/ui/input'
 import {
   Table,
   TableBody,
@@ -10,31 +12,42 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { getItems, deleteItem } from '../api/itemsApi'
-import type { Item } from '../api/itemsApi'
+} from '@/shared/components/ui/table'
+import { getItems, deleteItem } from '../services/itemsApi'
+import type { Item } from '../services/itemsApi'
 import ItemDialog from './ItemDialog'
+import DeleteItemDialog from './DeleteItemDialog'
+import Pagination from '@/shared/components/Pagination'
+
+type SortField = 'id' | 'name' | 'description'
+
+function SortIcon({ field, sort }: { field: SortField; sort: string }) {
+  const [f, d] = sort.split(',')
+  if (f !== field) return <ChevronsUpDown className="ml-1 h-3 w-3 inline" />
+  return d === 'asc'
+    ? <ChevronUp className="ml-1 h-3 w-3 inline" />
+    : <ChevronDown className="ml-1 h-3 w-3 inline" />
+}
 
 export default function ItemsPage() {
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
 
-  const { data: items = [], isLoading } = useQuery({
-    queryKey: ['items'],
-    queryFn: getItems,
+  const [page, setPage] = useState(0)
+  const [sort, setSort] = useState('id,asc')
+  const [searchInput, setSearchInput] = useState('')
+  const debouncedSearch = useDebounce(searchInput, 300)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['items', { page, sort, search: debouncedSearch }],
+    queryFn: () => getItems({ page, size: 10, sort, search: debouncedSearch }),
+    placeholderData: keepPreviousData,
   })
+
+  const items         = data?.content       ?? []
+  const totalPages    = data?.totalPages    ?? 0
+  const totalElements = data?.totalElements ?? 0
 
   const deleteMutation = useMutation({
     mutationFn: deleteItem,
@@ -55,6 +68,12 @@ export default function ItemsPage() {
     setDialogOpen(true)
   }
 
+  const handleSort = (field: SortField) => {
+    const [f, d] = sort.split(',')
+    setSort(`${field},${f === field && d === 'asc' ? 'desc' : 'asc'}`)
+    setPage(0)
+  }
+
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="flex items-center justify-between mb-6">
@@ -63,6 +82,16 @@ export default function ItemsPage() {
           <Plus className="mr-2 h-4 w-4" />
           New Item
         </Button>
+      </div>
+
+      <div className="mb-4">
+        <Input
+          type="text"
+          placeholder="Search by name..."
+          value={searchInput}
+          onChange={(e) => { setSearchInput(e.target.value); setPage(0) }}
+          className="max-w-sm"
+        />
       </div>
 
       {isLoading ? (
@@ -75,9 +104,21 @@ export default function ItemsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-16">ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="w-16">
+                <button type="button" onClick={() => handleSort('id')} className="flex items-center">
+                  ID <SortIcon field="id" sort={sort} />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button type="button" onClick={() => handleSort('name')} className="flex items-center">
+                  Name <SortIcon field="name" sort={sort} />
+                </button>
+              </TableHead>
+              <TableHead>
+                <button type="button" onClick={() => handleSort('description')} className="flex items-center">
+                  Description <SortIcon field="description" sort={sort} />
+                </button>
+              </TableHead>
               <TableHead className="w-28 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -100,41 +141,23 @@ export default function ItemsPage() {
                     <Pencil className="h-4 w-4" />
                   </Button>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete item?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete &quot;{item.name}&quot;.
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          onClick={() => deleteMutation.mutate(item.id)}
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <DeleteItemDialog
+                    itemName={item.name}
+                    onConfirm={() => deleteMutation.mutate(item.id)}
+                  />
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalElements={totalElements}
+        onPageChange={setPage}
+      />
 
       <ItemDialog
         open={dialogOpen}
