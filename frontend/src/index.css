@@ -1,9 +1,9 @@
 /* ─── Vendors ───────────────────────────────────────────────────────────────── */
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 /* ─── App styles ────────────────────────────────────────────────────────────── */
-@import "./styles/theme.css";
-@import "./styles/tokens.css";
-@import "./styles/base.css";
+@import './styles/theme.css';
+@import './styles/tokens.css';
+@import './styles/base.css';

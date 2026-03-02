@@ -1,16 +1,16 @@
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/shared/components/ui/dialog'
+} from '@/shared/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -18,55 +18,53 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/shared/components/ui/form'
-import { Input } from '@/shared/components/ui/input'
-import { Button } from '@/shared/components/ui/button'
-import { createItem, updateItem } from '../services/itemsApi'
-import type { Item } from '../services/itemsApi'
+} from '@/shared/components/ui/form';
+import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { createItem, updateItem } from '../services/itemsApi';
+import type { Item } from '../services/itemsApi';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   description: z.string().max(255),
-})
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 interface Props {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  item: Item | null
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  item: Item | null;
 }
 
 export default function ItemDialog({ open, onOpenChange, item }: Props) {
-  const queryClient = useQueryClient()
-  const isEditing = !!item
+  const queryClient = useQueryClient();
+  const isEditing = !!item;
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', description: '' },
-  })
+  });
 
   useEffect(() => {
     if (open) {
       form.reset(
         item
           ? { name: item.name, description: item.description ?? '' }
-          : { name: '', description: '' }
-      )
+          : { name: '', description: '' },
+      );
     }
-  }, [open, item, form])
+  }, [open, item, form]);
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      isEditing ? updateItem(item!.id, data) : createItem(data),
+    mutationFn: (data: FormData) => (isEditing ? updateItem(item!.id, data) : createItem(data)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items'] })
-      toast.success(isEditing ? 'Item updated' : 'Item created')
-      onOpenChange(false)
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast.success(isEditing ? 'Item updated' : 'Item created');
+      onOpenChange(false);
     },
-    onError: () =>
-      toast.error(isEditing ? 'Failed to update item' : 'Failed to create item'),
-  })
+    onError: () => toast.error(isEditing ? 'Failed to update item' : 'Failed to create item'),
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,10 +74,7 @@ export default function ItemDialog({ open, onOpenChange, item }: Props) {
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -109,24 +104,16 @@ export default function ItemDialog({ open, onOpenChange, item }: Props) {
             />
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending
-                  ? 'Saving...'
-                  : isEditing
-                  ? 'Update'
-                  : 'Create'}
+                {mutation.isPending ? 'Saving...' : isEditing ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

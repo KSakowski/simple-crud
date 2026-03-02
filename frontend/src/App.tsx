@@ -1,8 +1,8 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Toaster } from '@/shared/components/ui/sonner'
-import ItemsPage from './features/items/components/ItemsPage'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/shared/components/ui/sonner';
+import ItemsPage from './features/items/components/ItemsPage';
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 export default function App() {
   return (
@@ -10,5 +10,5 @@ export default function App() {
       <ItemsPage />
       <Toaster />
     </QueryClientProvider>
-  )
+  );
 }

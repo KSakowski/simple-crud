@@ -1,10 +1,10 @@
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@/shared/components/ui/button';
 
 interface PaginationProps {
-  page: number
-  totalPages: number
-  totalElements: number
-  onPageChange: (page: number) => void
+  page: number;
+  totalPages: number;
+  totalElements: number;
+  onPageChange: (page: number) => void;
 }
 
 export default function Pagination({
@@ -14,7 +14,7 @@ export default function Pagination({
   onPageChange,
 }: PaginationProps) {
   return (
-    <div className="flex items-center justify-between mt-4">
+    <div className="mt-4 flex items-center justify-between">
       <Button
         variant="outline"
         size="sm"
@@ -23,7 +23,7 @@ export default function Pagination({
       >
         Previous
       </Button>
-      <span className="text-sm text-muted-foreground">
+      <span className="text-muted-foreground text-sm">
         Page {page + 1} of {totalPages} ({totalElements} total)
       </span>
       <Button
@@ -35,5 +35,5 @@ export default function Pagination({
         Next
       </Button>
     </div>
-  )
+  );
 }
