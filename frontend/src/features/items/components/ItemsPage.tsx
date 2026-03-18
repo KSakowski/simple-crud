@@ -1,38 +1,16 @@
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Plus, Pencil, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/components/ui/table';
-import { getItems, deleteItem } from '../services/itemsApi';
+import { useItems } from '../hooks/useItems';
 import type { Item } from '../types/item';
+import type { SortField } from './SortIcon';
 import ItemDialog from './ItemDialog';
-import DeleteItemDialog from './DeleteItemDialog';
+import ItemsTable from './ItemsTable';
 import Pagination from '@/shared/components/Pagination';
 
-type SortField = 'id' | 'name' | 'description';
-
-function SortIcon({ field, sort }: { field: SortField; sort: string }) {
-  const [f, d] = sort.split(',');
-  if (f !== field) return <ChevronsUpDown className="ml-1 inline h-3 w-3" />;
-  return d === 'asc' ? (
-    <ChevronUp className="ml-1 inline h-3 w-3" />
-  ) : (
-    <ChevronDown className="ml-1 inline h-3 w-3" />
-  );
-}
-
 export default function ItemsPage() {
-  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
 
@@ -41,23 +19,10 @@ export default function ItemsPage() {
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, 300);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['items', { page, sort, search: debouncedSearch }],
-    queryFn: () => getItems({ page, size: 10, sort, search: debouncedSearch }),
-    placeholderData: keepPreviousData,
-  });
-
-  const items = data?.content ?? [];
-  const totalPages = data?.totalPages ?? 0;
-  const totalElements = data?.totalElements ?? 0;
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteItem,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items'] });
-      toast.success('Item deleted');
-    },
-    onError: () => toast.error('Failed to delete item'),
+  const { items, totalPages, totalElements, isLoading, deleteItem } = useItems({
+    page,
+    sort,
+    search: debouncedSearch,
   });
 
   const openCreate = () => {
@@ -104,59 +69,7 @@ export default function ItemsPage() {
       ) : items.length === 0 ? (
         <p className="text-muted-foreground py-16 text-center">No items yet. Add your first one!</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">
-                <button
-                  type="button"
-                  onClick={() => handleSort('id')}
-                  className="flex items-center"
-                >
-                  ID <SortIcon field="id" sort={sort} />
-                </button>
-              </TableHead>
-              <TableHead>
-                <button
-                  type="button"
-                  onClick={() => handleSort('name')}
-                  className="flex items-center"
-                >
-                  Name <SortIcon field="name" sort={sort} />
-                </button>
-              </TableHead>
-              <TableHead>
-                <button
-                  type="button"
-                  onClick={() => handleSort('description')}
-                  className="flex items-center"
-                >
-                  Description <SortIcon field="description" sort={sort} />
-                </button>
-              </TableHead>
-              <TableHead className="w-28 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="text-muted-foreground font-mono text-sm">{item.id}</TableCell>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-muted-foreground">{item.description}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-
-                  <DeleteItemDialog
-                    itemName={item.name}
-                    onConfirm={() => deleteMutation.mutate(item.id)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ItemsTable items={items} sort={sort} onSort={handleSort} onEdit={openEdit} onDelete={deleteItem} />
       )}
 
       <Pagination
